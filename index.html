@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>neoSlice — Slice smarter.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    :root {
+      --bg: #000;
+      --surface: #0a0a0a;
+      --surface2: #111;
+      --border: rgba(255,255,255,0.08);
+      --border-light: rgba(255,255,255,0.12);
+      --text: #f5f5f7;
+      --text-secondary: #86868b;
+      --text-tertiary: #515154;
+      --accent: #2997ff;
+      --accent-green: #30d158;
+      --accent-warm: #ffd60a;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: 'Instrument Serif', Georgia, serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 52px;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1080px; margin: 0 auto; padding: 0 32px;
+      height: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 18px; font-weight: 600; letter-spacing: -0.3px;
+      color: var(--text);
+    }
+    .nav-logo em { font-style: normal; }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      font-size: 13px; color: var(--text-secondary);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      font-size: 13px; font-weight: 500;
+      color: var(--accent); text-decoration: none;
+      transition: opacity 0.2s; cursor: pointer; background: none; border: none;
+    }
+    .nav-cta:hover { opacity: 0.7; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 32px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Gradient orb */
+    .hero-orb {
+      position: absolute;
+      width: 800px; height: 800px;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(41,151,255,0.12) 0%,
+        rgba(41,151,255,0.04) 40%,
+        transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -55%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size: 13px; font-weight: 500;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      margin-bottom: 20px;
+      opacity: 0; animation: riseUp 0.8s 0.1s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .hero h1 {
+      font-size: clamp(56px, 8vw, 96px);
+      font-weight: 600;
+      letter-spacing: -3px;
+      line-height: 1.02;
+      color: var(--text);
+      margin-bottom: 10px;
+      opacity: 0; animation: riseUp 0.8s 0.2s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .hero-tagline {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: clamp(28px, 4vw, 48px);
+      color: var(--text-secondary);
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      margin-bottom: 32px;
+      opacity: 0; animation: riseUp 0.8s 0.3s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .hero-desc {
+      max-width: 520px; margin: 0 auto 48px;
+      font-size: 17px; font-weight: 300;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      opacity: 0; animation: riseUp 0.8s 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .hero-actions {
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      opacity: 0; animation: riseUp 0.8s 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent);
+      color: #fff; font-family: var(--font);
+      font-size: 15px; font-weight: 500;
+      padding: 14px 36px; border-radius: 980px;
+      border: none; cursor: pointer; text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+      letter-spacing: -0.1px;
+    }
+    .btn-primary:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 4px rgba(41,151,255,0.2);
+    }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-ghost {
+      font-size: 15px; font-weight: 400;
+      color: var(--accent); background: none; border: none;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 4px;
+      transition: opacity 0.2s;
+    }
+    .btn-ghost:hover { opacity: 0.7; }
+    .btn-ghost svg { transition: transform 0.2s; }
+    .btn-ghost:hover svg { transform: translateX(3px); }
+
+    .hero-meta {
+      margin-top: 8px;
+      font-size: 13px; color: var(--text-tertiary);
+    }
+    .hero-meta span { color: var(--accent-green); font-weight: 500; }
+
+    /* SCREENSHOT */
+    .screenshot-section {
+      padding: 0 32px 120px;
+      max-width: 1080px; margin: 0 auto;
+      opacity: 0; animation: riseUp 1s 0.7s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    .screenshot-frame {
+      background: #1c1c1e;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04),
+        0 32px 80px rgba(0,0,0,0.6),
+        0 0 120px rgba(41,151,255,0.04);
+    }
+    .frame-bar {
+      background: #2c2c2e;
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .frame-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .frame-dot-r { background: #ff5f57; }
+    .frame-dot-y { background: #febc2e; }
+    .frame-dot-g { background: #28c840; }
+    .frame-title {
+      font-size: 13px; color: var(--text-secondary);
+      margin-left: 8px; font-weight: 400;
+    }
+    .frame-img {
+      width: 100%; display: block;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+    }
+    .frame-placeholder {
+      width: 100%; aspect-ratio: 16/9;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+    }
+    .frame-placeholder-icon { font-size: 48px; opacity: 0.4; }
+    .frame-placeholder p { font-size: 13px; color: var(--text-tertiary); }
+    .frame-placeholder code { font-size: 12px; color: var(--accent); }
+
+    /* DIVIDER */
+    .divider {
+      max-width: 1080px; margin: 0 auto;
+      border: none; border-top: 1px solid var(--border);
+    }
+
+    /* SECTION BASE */
+    .section {
+      max-width: 1080px; margin: 0 auto;
+      padding: 100px 32px;
+    }
+    .section-center { text-align: center; }
+    .section-label {
+      font-size: 13px; font-weight: 500;
+      color: var(--accent); letter-spacing: 0.3px;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(36px, 5vw, 52px);
+      font-weight: 600; letter-spacing: -2px;
+      line-height: 1.05; color: var(--text);
+      margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 17px; font-weight: 300;
+      color: var(--text-secondary); line-height: 1.6;
+      max-width: 520px; margin: 0 auto;
+    }
+
+    /* HOW IT WORKS */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      margin-top: 64px;
+    }
+    .step-card {
+      background: var(--surface);
+      padding: 40px 36px;
+      transition: background 0.25s;
+    }
+    .step-card:hover { background: var(--surface2); }
+    .step-num {
+      font-size: 13px; font-weight: 500;
+      color: var(--text-tertiary); letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+    .step-icon-wrap {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: rgba(41,151,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; margin-bottom: 20px;
+    }
+    .step-card h3 {
+      font-size: 20px; font-weight: 600;
+      letter-spacing: -0.5px; color: var(--text);
+      margin-bottom: 10px;
+    }
+    .step-card p { font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* FEATURES BENTO */
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      margin-top: 64px;
+    }
+    .bento-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      transition: border-color 0.25s, background 0.25s;
+      overflow: hidden; position: relative;
+    }
+    .bento-card:hover {
+      border-color: var(--border-light);
+      background: var(--surface2);
+    }
+    .bento-card.col-8 { grid-column: span 8; }
+    .bento-card.col-4 { grid-column: span 4; }
+    .bento-card.col-6 { grid-column: span 6; }
+    .bento-card.col-12 { grid-column: span 12; }
+    .bento-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 20px;
+    }
+    .bento-icon.blue  { background: rgba(41,151,255,0.12); }
+    .bento-icon.green { background: rgba(48,209,88,0.12); }
+    .bento-icon.yellow{ background: rgba(255,214,10,0.12); }
+    .bento-icon.purple{ background: rgba(191,90,242,0.12); }
+    .bento-card h3 {
+      font-size: 20px; font-weight: 600;
+      letter-spacing: -0.5px; color: var(--text);
+      margin-bottom: 8px;
+    }
+    .bento-card p {
+      font-size: 15px; color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    /* Big card accent */
+    .bento-big-number {
+      font-size: 72px; font-weight: 600;
+      letter-spacing: -4px; color: var(--text);
+      line-height: 1; margin: 16px 0 8px;
+    }
+    .bento-big-number em { font-style: normal; color: var(--accent-green); }
+    .bento-bar-demo { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; }
+    .bar-row { display: flex; align-items: center; gap: 12px; }
+    .bar-label { font-size: 12px; color: var(--text-tertiary); width: 90px; text-align: right; }
+    .bar-track {
+      flex: 1; height: 6px; background: rgba(255,255,255,0.06);
+      border-radius: 3px; overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%; border-radius: 3px;
+      animation: barGrow 1.5s cubic-bezier(0.16,1,0.3,1) forwards;
+      transform-origin: left;
+    }
+    .bar-fill.cyan   { background: #00ffe0; }
+    .bar-fill.green  { background: var(--accent-green); }
+    .bar-fill.yellow { background: var(--accent-warm); }
+    .bar-val { font-size: 12px; color: var(--text-secondary); width: 36px; }
+    @keyframes barGrow { from { width: 0; } }
+
+    /* COMPAT */
+    .compat-section {
+      max-width: 1080px; margin: 0 auto;
+      padding: 0 32px 100px;
+    }
+    .compat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 40px;
+      flex-wrap: wrap;
+    }
+    .compat-left h2 {
+      font-size: 28px; font-weight: 600;
+      letter-spacing: -1px; color: var(--text);
+      margin-bottom: 8px;
+    }
+    .compat-left p { font-size: 15px; color: var(--text-secondary); }
+    .compat-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+    .chip {
+      font-size: 13px; font-weight: 500;
+      padding: 8px 16px; border-radius: 980px;
+      border: 1px solid var(--border-light);
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .chip:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+    .chip.green { color: var(--accent-green); border-color: rgba(48,209,88,0.3); background: rgba(48,209,88,0.06); }
+
+    /* BETA */
+    .beta-section {
+      max-width: 1080px; margin: 0 auto;
+      padding: 0 32px 100px;
+    }
+    .beta-card {
+      background: rgba(255,214,10,0.04);
+      border: 1px solid rgba(255,214,10,0.15);
+      border-radius: 16px;
+      padding: 28px 36px;
+      display: flex; align-items: flex-start; gap: 16px;
+    }
+    .beta-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent-warm);
+      margin-top: 6px; flex-shrink: 0;
+      box-shadow: 0 0 10px var(--accent-warm);
+      animation: betaPulse 2s infinite;
+    }
+    @keyframes betaPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .beta-card h4 {
+      font-size: 15px; font-weight: 600;
+      color: var(--accent-warm); margin-bottom: 4px;
+    }
+    .beta-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* CTA SECTION */
+    .cta-section {
+      padding: 0 32px 160px;
+    }
+    .cta-inner {
+      max-width: 1080px; margin: 0 auto;
+      background: linear-gradient(135deg, #1c1c1e 0%, #111 100%);
+      border: 1px solid var(--border-light);
+      border-radius: 24px;
+      padding: 100px 48px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .cta-inner::before {
+      content: '';
+      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(41,151,255,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .free-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(48,209,88,0.1);
+      border: 1px solid rgba(48,209,88,0.25);
+      color: var(--accent-green);
+      font-size: 13px; font-weight: 500;
+      padding: 6px 14px; border-radius: 980px;
+      margin-bottom: 28px;
+    }
+    .free-pill::before {
+      content: ''; width: 6px; height: 6px;
+      background: var(--accent-green); border-radius: 50%;
+    }
+    .cta-inner h2 {
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 600; letter-spacing: -2.5px;
+      line-height: 1.05; color: var(--text);
+      margin-bottom: 16px;
+    }
+    .cta-inner p {
+      font-size: 19px; font-weight: 300;
+      color: var(--text-secondary); margin-bottom: 40px;
+    }
+    .cta-inner .btn-primary {
+      font-size: 17px; padding: 16px 48px;
+    }
+    .cta-meta {
+      margin-top: 20px;
+      font-size: 13px; color: var(--text-tertiary);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 32px;
+    }
+    .footer-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-logo { font-size: 15px; font-weight: 600; color: var(--text-tertiary); }
+    .footer-right { font-size: 13px; color: var(--text-tertiary); }
+    .footer-right a { color: var(--text-tertiary); text-decoration: none; }
+    .footer-right a:hover { color: var(--text-secondary); }
+
+    /* MODAL */
+    .overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(20px);
+      display: none; align-items: flex-end; justify-content: center;
+      padding: 0 16px 24px;
+    }
+    .overlay.open { display: flex; }
+    .sheet {
+      background: #1c1c1e;
+      border: 1px solid var(--border-light);
+      border-radius: 24px;
+      padding: 32px;
+      max-width: 480px; width: 100%;
+      animation: sheetUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+      position: relative;
+    }
+    @keyframes sheetUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .sheet-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: none; cursor: pointer; color: var(--text-secondary);
+      font-size: 16px; display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .sheet-close:hover { background: rgba(255,255,255,0.12); }
+    .sheet-logo { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .sheet-version {
+      font-size: 13px; color: var(--text-tertiary); margin-bottom: 24px;
+    }
+    .sheet-steps { margin-bottom: 24px; }
+    .sheet-step {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 12px 0;
+    }
+    .sheet-step + .sheet-step { border-top: 1px solid var(--border); }
+    .sheet-step-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: rgba(41,151,255,0.15);
+      color: var(--accent); font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .sheet-step p { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+    .sheet-step p strong { color: var(--text); font-weight: 500; }
+    .sheet-btn {
+      width: 100%; padding: 16px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 12px;
+      font-family: var(--font); font-size: 15px; font-weight: 500;
+      cursor: pointer; transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+      letter-spacing: -0.1px;
+    }
+    .sheet-btn:hover { transform: scale(1.02); filter: brightness(1.1); }
+    .sheet-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; filter: none; }
+    .sheet-free {
+      text-align: center; margin-top: 12px;
+      font-size: 13px; color: var(--text-tertiary);
+    }
+
+    /* ANIMATIONS */
+    @keyframes riseUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .reveal {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .bento-card.col-8, .bento-card.col-4, .bento-card.col-6 { grid-column: span 12; }
+      .compat-card { flex-direction: column; }
+      .cta-inner { padding: 60px 24px; }
+      .hero h1 { letter-spacing: -2px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">neoSlice</div>
+    <div class="nav-links">
+      <a href="#how">Comment ça marche</a>
+      <a href="#features">Fonctionnalités</a>
+      <a href="#compat">Compatibilité</a>
+    </div>
+    <button class="nav-cta" onclick="openModal()">Télécharger ↓</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-orb"></div>
+  <p class="hero-eyebrow">AI-Powered 3D Print Optimizer · v0.1.0 Bêta</p>
+  <h1>neoSlice</h1>
+  <p class="hero-tagline">Slice smarter, print better.</p>
+  <p class="hero-desc">
+    Glissez votre STL, choisissez vos intentions en langage simple.
+    neoSlice génère un fichier .3MF optimisé par IA, prêt à imprimer dans Bambu Studio.
+  </p>
+  <div class="hero-actions">
+    <button class="btn-primary" onclick="openModal()">
+      Télécharger gratuitement
+    </button>
+    <a href="#how" class="btn-ghost">
+      Découvrir comment ça marche
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <p class="hero-meta" id="counter-text">Chargement…</p>
+  </div>
+</section>
+
+<!-- SCREENSHOT -->
+<div class="screenshot-section">
+  <div class="screenshot-frame">
+    <div class="frame-bar">
+      <div class="frame-dot frame-dot-r"></div>
+      <div class="frame-dot frame-dot-y"></div>
+      <div class="frame-dot frame-dot-g"></div>
+      <span class="frame-title">neoSlice — AI-Powered 3D Print Optimizer</span>
+    </div>
+    <!-- Remplacez src par l'URL de votre screenshot hébergé -->
+    <img class="frame-img" src="VOTRE_SCREENSHOT_URL"
+         onerror="this.style.display='none'; document.getElementById('frame-ph').style.display='flex';"
+         alt="Interface neoSlice">
+    <div class="frame-placeholder" id="frame-ph" style="display:none;">
+      <div class="frame-placeholder-icon">🖥️</div>
+      <p>Remplacez <code>VOTRE_SCREENSHOT_URL</code> par l'URL de votre capture d'écran</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- HOW IT WORKS -->
+<section class="section section-center reveal" id="how">
+  <p class="section-label">Comment ça marche</p>
+  <h2 class="section-title">Trois étapes.<br>Rien de plus.</h2>
+  <p class="section-sub">Conçu pour ceux qui veulent imprimer, pas configurer.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <p class="step-num">01</p>
+      <div class="step-icon-wrap">📂</div>
+      <h3>Importez</h3>
+      <p>Glissez-déposez votre fichier STL directement dans neoSlice. Analyse instantanée.</p>
+    </div>
+    <div class="step-card">
+      <p class="step-num">02</p>
+      <div class="step-icon-wrap">🎛️</div>
+      <h3>Choisissez</h3>
+      <p>Qualité, résistance, vitesse, adhérence. En mots simples. L'IA fait le reste.</p>
+    </div>
+    <div class="step-card">
+      <p class="step-num">03</p>
+      <div class="step-icon-wrap">🚀</div>
+      <h3>Exportez</h3>
+      <p>Un .3MF parfaitement configuré, prêt à ouvrir dans Bambu Studio.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- FEATURES BENTO -->
+<section class="section reveal" id="features">
+  <div class="section-center">
+    <p class="section-label">Fonctionnalités</p>
+    <h2 class="section-title">Pensé pour les makers.</h2>
+  </div>
+  <div class="bento">
+
+    <div class="bento-card col-8">
+      <div class="bento-icon blue">🤖</div>
+      <h3>Analyse IA en temps réel</h3>
+      <p>neoSlice analyse automatiquement les surplombs, la stabilité, la fragilité et le volume de supports de votre modèle — en quelques secondes.</p>
+      <div class="bento-bar-demo">
+        <div class="bar-row">
+          <span class="bar-label">Surplombs</span>
+          <div class="bar-track"><div class="bar-fill cyan" style="width:11%"></div></div>
+          <span class="bar-val">11%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">Stabilité</span>
+          <div class="bar-track"><div class="bar-fill green" style="width:80%"></div></div>
+          <span class="bar-val">80%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">Vol. support</span>
+          <div class="bar-track"><div class="bar-fill yellow" style="width:22%"></div></div>
+          <span class="bar-val">22%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bento-card col-4">
+      <div class="bento-icon green">⚡</div>
+      <h3>Génération instantanée</h3>
+      <p>Les paramètres optimaux générés en quelques secondes selon votre intention.</p>
+      <div class="bento-big-number"><em>3s</em></div>
+      <p style="font-size:13px; color:var(--text-tertiary);">temps de génération moyen</p>
+    </div>
+
+    <div class="bento-card col-4">
+      <div class="bento-icon yellow">🎯</div>
+      <h3>Orientation optimale</h3>
+      <p>L'IA suggère la meilleure orientation pour minimiser les supports et maximiser la qualité.</p>
+    </div>
+
+    <div class="bento-card col-4">
+      <div class="bento-icon purple">📋</div>
+      <h3>Presets intelligents</h3>
+      <p>Qualité · Résistance · Vitesse · Adhérence · Usage — des profils clairs adaptés à chaque projet.</p>
+    </div>
+
+    <div class="bento-card col-4">
+      <div class="bento-icon green">🆓</div>
+      <h3>Toujours gratuit</h3>
+      <p>neoSlice est et restera gratuit. Aucun abonnement, aucune limitation cachée.</p>
+    </div>
+
+    <div class="bento-card col-8">
+      <div class="bento-icon blue">🔄</div>
+      <h3>Développement actif</h3>
+      <p>Développé par Emmanuel Percheron, passionné d'impression 3D. Nouvelles fonctionnalités et correctifs déployés régulièrement. Chaque retour compte.</p>
+    </div>
+
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- COMPAT -->
+<div class="compat-section reveal" id="compat">
+  <div class="compat-card">
+    <div class="compat-left">
+      <h2>Fait pour Bambu Lab.</h2>
+      <p>Compatible avec les imprimantes et l'écosystème Bambu Studio.</p>
+    </div>
+    <div class="compat-chips">
+      <span class="chip green">X1 Carbon</span>
+      <span class="chip green">P1S</span>
+      <span class="chip green">A1 Mini</span>
+      <span class="chip">Windows 10</span>
+      <span class="chip">Windows 11</span>
+    </div>
+  </div>
+</div>
+
+<!-- BETA -->
+<div class="beta-section reveal">
+  <div class="beta-card">
+    <div class="beta-dot"></div>
+    <div>
+      <h4>Version Bêta</h4>
+      <p>neoSlice est en développement actif. Des correctifs et nouvelles fonctionnalités arrivent régulièrement. Si vous rencontrez un problème, signalez-le — chaque retour améliore l'application.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section reveal">
+  <div class="cta-inner">
+    <div class="free-pill">Entièrement gratuit</div>
+    <h2>Prêt à imprimer mieux ?</h2>
+    <p>Téléchargez neoSlice pour Windows, c'est gratuit.</p>
+    <button class="btn-primary" onclick="openModal()">
+      Télécharger neoSlice
+    </button>
+    <p class="cta-meta">Windows 10 & 11 · Aucune inscription requise</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">neoSlice</div>
+    <div class="footer-right">© 2025 Emmanuel Percheron</div>
+  </div>
+</footer>
+
+<!-- MODAL / BOTTOM SHEET -->
+<div class="overlay" id="modal">
+  <div class="sheet">
+    <button class="sheet-close" onclick="closeModal()">✕</button>
+    <div class="sheet-logo">neoSlice</div>
+    <div class="sheet-version">v0.1.0 Bêta · Windows 10/11</div>
+    <div class="sheet-steps">
+      <div class="sheet-step">
+        <div class="sheet-step-num">1</div>
+        <p>Téléchargez le fichier <strong>.exe</strong></p>
+      </div>
+      <div class="sheet-step">
+        <div class="sheet-step-num">2</div>
+        <p>Si Windows affiche un avertissement SmartScreen, cliquez sur <strong>« Informations complémentaires »</strong> puis <strong>« Exécuter quand même »</strong></p>
+      </div>
+      <div class="sheet-step">
+        <div class="sheet-step-num">3</div>
+        <p>Glissez votre premier STL et imprimez 🎉</p>
+      </div>
+    </div>
+    <button class="sheet-btn" id="dl-btn" onclick="handleDownload()">
+      Télécharger maintenant
+    </button>
+    <p class="sheet-free">Gratuit · Aucune inscription</p>
+  </div>
+</div>
+
+<script>
+  // ── À CONFIGURER ────────────────────────────────────────────────
+  const SUPABASE_URL   = 'https://VOTRE_PROJECT_ID.supabase.co';
+  const SUPABASE_KEY   = 'VOTRE_ANON_KEY';
+  const DOWNLOAD_URL   = 'https://github.com/VOTRE_USER/VOTRE_REPO/releases/latest/download/neoSlice-setup.exe';
+  const COUNTER_TABLE  = 'downloads';
+  const COUNTER_ROW_ID = 1;
+  // ────────────────────────────────────────────────────────────────
+
+  async function fetchCount() {
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/${COUNTER_TABLE}?id=eq.${COUNTER_ROW_ID}&select=count`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const d = await r.json();
+      const n = d?.[0]?.count;
+      const el = document.getElementById('counter-text');
+      if (n !== undefined) {
+        el.innerHTML = `<span style="color:var(--accent-green);font-weight:500">${Number(n).toLocaleString('fr-FR')}</span> téléchargements`;
+      } else { el.textContent = ''; }
+    } catch { document.getElementById('counter-text').textContent = ''; }
+  }
+
+  async function incrementCount() {
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_downloads`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ row_id: COUNTER_ROW_ID })
+      });
+    } catch {}
+  }
+
+  async function handleDownload() {
+    const btn = document.getElementById('dl-btn');
+    btn.disabled = true;
+    btn.textContent = 'Démarrage…';
+    await incrementCount();
+    await fetchCount();
+    window.location.href = DOWNLOAD_URL;
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Télécharger maintenant';
+      closeModal();
+    }, 3000);
+  }
+
+  function openModal() {
+    document.getElementById('modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeModal() {
+    document.getElementById('modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  const io = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+    { threshold: 0.08 }
+  );
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  fetchCount();
+</script>
+</body>
+</html>
